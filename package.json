@@ -1,0 +1,17 @@
+{
+  "name": "database-sdk",
+  "version": "1.0.0",
+  "description": "sdk for transcendence database",
+  "main": "index.js",
+  "scripts": {
+    "test": "tsx test/index.ts"
+  },
+  "author": "fghybsre",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^24.0.10",
+    "pocketbase": "^0.26.1",
+    "tsc": "^2.0.4",
+    "tsx": "^4.20.3"
+  }
+}
