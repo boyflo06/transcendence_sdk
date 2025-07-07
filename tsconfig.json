@@ -1,5 +1,13 @@
 {
 	"compilerOptions": {
-		"types": ["node"]
-	}
+		"types": ["node"],
+		"outDir": "./dist",
+		"declaration": true,
+		"declarationDir": "./dist",
+		"module": "commonjs",
+		"target": "es2024",
+		"esModuleInterop": true,
+		"strict": true
+	},
+	"include": ["src"]
 }

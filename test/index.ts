@@ -1,17 +1,17 @@
 import { promisify } from "util";
-import DataBase from "../database";
+import DataBase from "../src";
 import * as fs from "fs"
 import { pipeline } from "stream";
 
 async function main() {
 	const db = new DataBase();
-	
+
 	//GetList
 	console.log(await db.collection("users").getList(1, 30, {
 		filter: "name = 'jake' AND (email = 'jake' OR email = 'exactlyyyy')"
 	}));
-	
-	
+
+
 	//GetOne
 	//console.log(await db.collection("users").getOne("9"))
 
