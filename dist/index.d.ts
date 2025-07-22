@@ -11,10 +11,10 @@ interface Return {
     error: any;
 }
 interface SingleReturn<T = any> extends Return {
-    item: T;
+    item?: T;
 }
 interface ListReturn<T = any> extends Return {
-    items: T[];
+    items?: T[];
 }
 
 declare class Collection {

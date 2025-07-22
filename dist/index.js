@@ -73,18 +73,25 @@ var Collection = class {
     url.searchParams.append("perPage", `1`);
     url.searchParams.append("filter", filter);
     options = Object.assign({ method: "GET" }, options);
-    const response = await (await fetch(url, options)).json();
+    const response = await fetch(url, options);
+    const data = await response.json();
     const res = {
       status: response.status,
-      error: response.ok ? void 0 : await response.json(),
-      item: response.ok ? await response.json()[0] : void 0
+      error: void 0,
+      item: void 0
     };
-    if (!response?.length) {
-      res.status = 404, res.error = {
-        error: "Not Found",
-        message: "The requested ressource was not found.",
-        status: 404
-      };
+    if (response.ok) {
+      if (!data.length || data.length === 0) {
+        res.status = 404, res.error = {
+          error: "Not Found",
+          message: "The requested ressource was not found.",
+          status: 404
+        };
+      } else {
+        res.item = data[0];
+      }
+    } else {
+      res.error = data;
     }
     return res;
   }
