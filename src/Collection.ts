@@ -61,20 +61,37 @@ class Collection {
 
 		options = Object.assign({ method: "GET" }, options);
 
-		const response = (await (await fetch(url, options)).json());
+		const response = await fetch(url, options);
+		const data = await response.json();
 		const res: SingleReturn<T> = {
 			status: response.status,
-			error: response.ok ? undefined : await response.json(),
-			item: response.ok ? await response.json()[0]: undefined
+			error: undefined,
+			item: undefined
 		}
-		if (!response?.length) {
+		if (response.ok) {
+			if (!data.length || data.length === 0) {
+				res.status = 404,
+				res.error = {
+					error: "Not Found",
+					message: "The requested ressource was not found.",
+					status: 404
+				}
+			} else {
+				res.item = data[0];
+			}
+		} else {
+			res.error = data;
+		}
+		/* if (res.status === 200 && (!data.length || data.length === 0)) {
 			res.status = 404,
 			res.error = {
 				error: "Not Found",
 				message: "The requested ressource was not found.",
 				status: 404
 			}
-		}
+		} else if (res.status === 200) {
+			res.item = data[0];
+		} */
 		return res;
 	}
 

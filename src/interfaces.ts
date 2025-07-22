@@ -14,9 +14,9 @@ export interface Return {
 }
 
 export interface SingleReturn<T = any> extends Return {
-	item: T
+	item?: T
 }
 
 export interface ListReturn<T = any> extends Return {
-	items: T[],
+	items?: T[],
 }
