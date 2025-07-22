@@ -6,6 +6,16 @@ interface ListOptions extends CommonOptions {
     perPage?: number;
     filter?: string;
 }
+interface Return {
+    status: number;
+    error: any;
+}
+interface SingleReturn<T = any> extends Return {
+    item: T;
+}
+interface ListReturn<T = any> extends Return {
+    items: T[];
+}
 
 declare class Collection {
     private name;
@@ -22,15 +32,15 @@ declare class Collection {
     /**
      * getList
      */
-    getList<T = any>(page?: number, perPage?: number, options?: ListOptions): Promise<T>;
+    getList<T = any>(page?: number, perPage?: number, options?: ListOptions): Promise<ListReturn<T>>;
     /**
      * getFirstListItem
      */
-    getFirstListItem<T = any>(filter: string, options?: CommonOptions): Promise<T>;
+    getFirstListItem<T = any>(filter: string, options?: CommonOptions): Promise<SingleReturn<T>>;
     /**
      * getOne
      */
-    getOne<T = any>(id: string, options?: CommonOptions): Promise<T>;
+    getOne<T = any>(id: string, options?: CommonOptions): Promise<SingleReturn<T>>;
     private containsFile;
     private convertToFormData;
     create<T = any>(body: {

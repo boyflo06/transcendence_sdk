@@ -1,5 +1,6 @@
+import { ListResult } from "pocketbase";
 import DataBase from "./DataBase";
-import { CommonOptions, ListOptions } from "./interfaces";
+import { CommonOptions, ListOptions, ListReturn, SingleReturn } from "./interfaces";
 
 class Collection {
 	private name: string;
@@ -28,7 +29,7 @@ class Collection {
 	/**
 	 * getList
 	 */
-	public async getList<T = any>(page: number = 1, perPage: number = 30, options?: ListOptions): Promise<T> {
+	public async getList<T = any>(page: number = 1, perPage: number = 30, options?: ListOptions): Promise<ListReturn<T>> {
 		//const url = encodeURI(`http://database:3000/table/${this.name}/getList?page=${page}&perPage=${perPage}`);
 
 		options = Object.assign({ page: page, perPage: perPage }, options);
@@ -41,13 +42,18 @@ class Collection {
 		options = Object.assign({ method: "GET" }, options);
 
 		const response = await fetch(url, options);
-		return (await response.json() as T);
+		const res: ListReturn<T> = {
+			status: response.status,
+			error: response.ok ? undefined : await response.json(),
+			items: response.ok ? await response.json(): undefined
+		}
+		return (res);
 	}
 
 	/**
 	 * getFirstListItem
 	 */
-	public async getFirstListItem<T = any>(filter: string, options?: CommonOptions): Promise<T> {
+	public async getFirstListItem<T = any>(filter: string, options?: CommonOptions): Promise<SingleReturn<T>> {
 		const url = new URL(`http://database:3000/table/${this.name}/getList`);
 		url.searchParams.append("page", `1`);
 		url.searchParams.append("perPage", `1`);
@@ -56,24 +62,36 @@ class Collection {
 		options = Object.assign({ method: "GET" }, options);
 
 		const response = (await (await fetch(url, options)).json());
-		if (!response?.length) {
-			throw new Error("Not Found", {
-				cause: 404 
-			});
+		const res: SingleReturn<T> = {
+			status: response.status,
+			error: response.ok ? undefined : await response.json(),
+			item: response.ok ? await response.json()[0]: undefined
 		}
-		return response[0] as T;
+		if (!response?.length) {
+			res.status = 404,
+			res.error = {
+				error: "Not Found",
+				message: "The requested ressource was not found.",
+				status: 404
+			}
+		}
+		return res;
 	}
 
 	/**
 	 * getOne
 	 */
-	public async getOne<T = any>(id: string, options?: CommonOptions): Promise<T> {
+	public async getOne<T = any>(id: string, options?: CommonOptions): Promise<SingleReturn<T>> {
 		const url = new URL(`http://database:3000/table/${this.name}/getOne/${id}`);
 
 		options = Object.assign({ method: "GET" }, options);
 		const response = await fetch(url, options);
-		//console.log(response);
-		return (await response.json() as T);
+		const res: SingleReturn<T> = {
+			status: response.status,
+			error: response.ok ? undefined : await response.json(),
+			item: response.ok ? await response.json(): undefined
+		}
+		return (res);
 	}
 
 	private containsFile(obj: any): boolean {
