@@ -55,8 +55,13 @@ class Collection {
 
 		options = Object.assign({ method: "GET" }, options);
 
-		const response = await fetch(url, options);
-		return (await response.json() as T);
+		const response = (await (await fetch(url, options)).json());
+		if (!response?.length) {
+			throw new Error("Not Found", {
+				cause: 404 
+			});
+		}
+		return response[0] as T;
 	}
 
 	/**

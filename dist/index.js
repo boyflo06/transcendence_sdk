@@ -68,8 +68,13 @@ var Collection = class {
     url.searchParams.append("perPage", `1`);
     url.searchParams.append("filter", filter);
     options = Object.assign({ method: "GET" }, options);
-    const response = await fetch(url, options);
-    return await response.json();
+    const response = await (await fetch(url, options)).json();
+    if (!response?.length) {
+      throw new Error("Not Found", {
+        cause: 404
+      });
+    }
+    return response[0];
   }
   /**
    * getOne
