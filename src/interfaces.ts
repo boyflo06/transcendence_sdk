@@ -31,6 +31,7 @@ export interface AvatarUploadResponse {
 	error?: any;
 	path?: string;
 	filename?: string;
+	previousAvatar?: string;
 }
 
 export interface User {

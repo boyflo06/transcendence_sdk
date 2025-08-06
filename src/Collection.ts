@@ -44,7 +44,7 @@ class Collection {
 		const res: ListReturn<T> = {
 			status: response.status,
 			error: response.ok ? undefined : await response.json(),
-			items: response.ok ? await response.json(): undefined
+			items: response.ok ? await response.json() : undefined
 		}
 		return (res);
 	}
@@ -70,11 +70,11 @@ class Collection {
 		if (response.ok) {
 			if (!data.length || data.length === 0) {
 				res.status = 404,
-				res.error = {
-					error: "Not Found",
-					message: "The requested ressource was not found.",
-					status: 404
-				}
+					res.error = {
+						error: "Not Found",
+						message: "The requested ressource was not found.",
+						status: 404
+					}
 			} else {
 				res.item = data[0];
 			}
@@ -105,7 +105,7 @@ class Collection {
 		const res: SingleReturn<T> = {
 			status: response.status,
 			error: response.ok ? undefined : await response.json(),
-			item: response.ok ? await response.json(): undefined
+			item: response.ok ? await response.json() : undefined
 		}
 		return (res);
 	}
@@ -130,7 +130,7 @@ class Collection {
 			const val = object[key];
 			if (typeof val === "undefined") continue;
 
-			if (typeof val === "object" && !this.containsFile({data: val})) {
+			if (typeof val === "object" && !this.containsFile({ data: val })) {
 				let payload: { [key: string]: string } = {};
 				payload[key] = val;
 				form.append("@jsonPayload", JSON.stringify(payload));
@@ -152,7 +152,7 @@ class Collection {
 			body: body
 		}, options);
 
-		if (options.body && options.body.constructor.name !== "FormData" 
+		if (options.body && options.body.constructor.name !== "FormData"
 			&& !(options.body instanceof FormData)) {
 			options.body = this.convertToFormData(options.body);
 		}
@@ -196,32 +196,35 @@ class Collection {
 				}
 			};
 		}
-
-		const formData = new FormData();
-		formData.append('avatar', imageFile);
-
-		const url = new URL(`http://database:3000/table/${this.name}/update/${userId}`);
-
-		const requestOptions = Object.assign({
-			method: "PATCH",
-			body: formData
-		}, options);
-
 		try {
-			const response = await fetch(url, requestOptions);
+			const user = await this.getOne<User>(userId);
+			const oldAvatar = user.item?.avatar;
+
+			const formData = new FormData();
+			formData.append('avatar', imageFile);
+
+			const url = new URL(`http://database:3000/table/${this.name}/update/${userId}`);
+			const response = await fetch(url, {
+				method: "PATCH",
+				body: formData,
+				...options
+			});
+
 			const data = await response.json();
 
 			if (response.ok) {
+				if (oldAvatar && oldAvatar !== data.avatar) {
+					await this.deletePhysicalFile(oldAvatar);
+				}
+
 				return {
 					status: response.status,
 					path: this.dbInstance.getFileUrl(this.name, userId, data.avatar).toString(),
-					filename: data.avatar
+					filename: data.avatar,
+					previousAvatar: oldAvatar
 				};
 			} else {
-				return {
-					status: response.status,
-					error: data
-				};
+				return { status: response.status, error: data };
 			}
 		} catch (error) {
 			return {
@@ -234,32 +237,42 @@ class Collection {
 			};
 		}
 	}
-
 	/** 
 	 * RemoveAvatar
 	*/
 
 	public async removeAvatar(userId: string, options?: CommonOptions): Promise<SingleReturn<User>> {
-		const updateData = { avatar: null };
+    try {
+        const currentUser = await this.getOne<User>(userId);
+        if (currentUser.error || !currentUser.item?.avatar) {
+            return {
+                status: 404,
+                error: { error: "Not Found", message: "Aucun avatar à supprimer", status: 404 }
+            };
+        }
 
-		try {
-			const result = await this.update<User>(userId, updateData, options);
-			return {
-				status: 200,
-				error: undefined,
-				item: result
-			};
-		} catch (error) {
-			return {
-				status: 500,
-				error: {
-					error: "Internal Server Error",
-					message: "Erreur lors de la suppression de l'avatar",
-					status: 500
-				}
-			};
-		}
-	}
+        const avatarToDelete = currentUser.item.avatar;
+
+        const result = await this.update<User>(userId, { avatar: null }, options);
+
+        await this.deletePhysicalFile(avatarToDelete);
+
+        return {
+            status: 200,
+            error: undefined,
+            item: result
+        };
+    } catch (error) {
+        return {
+            status: 500,
+            error: {
+                error: "Internal Server Error",
+                message: "Erreur lors de la suppression de l'avatar",
+                status: 500
+            }
+        };
+    }
+}
 
 	/**
 	 * Avatar format and size validation
@@ -267,30 +280,43 @@ class Collection {
 	private validateAvatarFile(file: File, options?: AvatarUploadOptions): { valid: boolean; error?: string } {
 		if (!file) {
 			return { valid: false, error: "Aucun fichier fourni" };
-		}file
+		} file
 
 		if (!file.type.startsWith('image/')) {
 			return { valid: false, error: "Le fichier doit être une image" };
-		}file
+		} file
 
 		const allowedTypes = options?.allowedTypes || ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 		if (!allowedTypes.includes(file.type)) {
-			return { 
-				valid: false, 
-				error: `Type d'image non autorisé. Types acceptés: ${allowedTypes.join(', ')}` 
+			return {
+				valid: false,
+				error: `Type d'image non autorisé. Types acceptés: ${allowedTypes.join(', ')}`
 			};
 		}
 
 		const maxSize = options?.maxSize || 5 * 1024 * 1024;
 		if (file.size > maxSize) {
-			return { 
-				valid: false, 
-				error: `Image trop volumineuse. Taille maximale: ${Math.round(maxSize / (1024 * 1024))}MB` 
+			return {
+				valid: false,
+				error: `Image trop volumineuse. Taille maximale: ${Math.round(maxSize / (1024 * 1024))}MB`
 			};
 		}
 
 		return { valid: true };
 	}
+
+	private async deletePhysicalFile(filename: string): Promise<void> {
+		try {
+			await fetch(`http://database:3000/files/delete/${filename}`, {
+				method: 'DELETE'
+			});
+		} catch (error) {
+			console.warn('Impossible de supprimer le fichier:', filename, error);
+		}
+	}
 }
+
+
+
 
 export default Collection
