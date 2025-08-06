@@ -1,6 +1,5 @@
-import { ListResult } from "pocketbase";
 import DataBase from "./DataBase";
-import { CommonOptions, ListOptions, ListReturn, SingleReturn } from "./interfaces";
+import { CommonOptions, ListOptions, ListReturn, SingleReturn, AvatarUploadOptions, AvatarUploadResponse, User } from "./interfaces";
 
 class Collection {
 	private name: string;
@@ -172,13 +171,125 @@ class Collection {
 			method: "PATCH",
 			body: body
 		}, options);
-		if (options.body && options.body.constructor.name !== "FormData" 
+		if (options.body && options.body.constructor.name !== "FormData"
 			&& !(options.body instanceof FormData)) {
 			options.body = this.convertToFormData(options.body);
 		}
 
 		const response = await fetch(url, options);
 		return (await response.json() as T);
+	}
+
+	/**
+	 * Upload Avatar
+	 */
+	public async uploadAvatar(userId: string, imageFile: File, options?: AvatarUploadOptions): Promise<AvatarUploadResponse> {
+		// Validation du fichier
+		const validation = this.validateAvatarFile(imageFile, options);
+		if (!validation.valid) {
+			return {
+				status: 400,
+				error: {
+					error: "Bad Request",
+					message: validation.error,
+					status: 400
+				}
+			};
+		}
+
+		const formData = new FormData();
+		formData.append('avatar', imageFile);
+
+		const url = new URL(`http://database:3000/table/${this.name}/update/${userId}`);
+
+		const requestOptions = Object.assign({
+			method: "PATCH",
+			body: formData
+		}, options);
+
+		try {
+			const response = await fetch(url, requestOptions);
+			const data = await response.json();
+
+			if (response.ok) {
+				return {
+					status: response.status,
+					path: this.dbInstance.getFileUrl(this.name, userId, data.avatar).toString(),
+					filename: data.avatar
+				};
+			} else {
+				return {
+					status: response.status,
+					error: data
+				};
+			}
+		} catch (error) {
+			return {
+				status: 500,
+				error: {
+					error: "Internal Server Error",
+					message: "Erreur lors de l'upload de l'avatar",
+					status: 500
+				}
+			};
+		}
+	}
+
+	/** 
+	 * RemoveAvatar
+	*/
+
+	public async removeAvatar(userId: string, options?: CommonOptions): Promise<SingleReturn<User>> {
+		const updateData = { avatar: null };
+
+		try {
+			const result = await this.update<User>(userId, updateData, options);
+			return {
+				status: 200,
+				error: undefined,
+				item: result
+			};
+		} catch (error) {
+			return {
+				status: 500,
+				error: {
+					error: "Internal Server Error",
+					message: "Erreur lors de la suppression de l'avatar",
+					status: 500
+				}
+			};
+		}
+	}
+
+	/**
+	 * Avatar format and size validation
+	 */
+	private validateAvatarFile(file: File, options?: AvatarUploadOptions): { valid: boolean; error?: string } {
+		if (!file) {
+			return { valid: false, error: "Aucun fichier fourni" };
+		}file
+
+		if (!file.type.startsWith('image/')) {
+			return { valid: false, error: "Le fichier doit être une image" };
+		}file
+
+		const allowedTypes = options?.allowedTypes || ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+		if (!allowedTypes.includes(file.type)) {
+			return { 
+				valid: false, 
+				error: `Type d'image non autorisé. Types acceptés: ${allowedTypes.join(', ')}` 
+			};
+		}
+
+		const maxSize = options?.maxSize || 5 * 1024 * 1024;
+		if (file.size > maxSize) {
+			return { 
+				valid: false, 
+				error: `Image trop volumineuse. Taille maximale: ${Math.round(maxSize / (1024 * 1024))}MB` 
+			};
+		}
+
+		return { valid: true };
 	}
 }
 

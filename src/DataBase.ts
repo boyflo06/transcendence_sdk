@@ -12,6 +12,10 @@ class DataBase {
 		return (new Collection(this, collectionName));
 	}
 
+	public users(): Collection { 
+		return this.collection("users");
+	}
+
 	/**
 	 * getFileUrl
 	 */
