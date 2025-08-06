@@ -16,6 +16,24 @@ interface SingleReturn<T = any> extends Return {
 interface ListReturn<T = any> extends Return {
     items?: T[];
 }
+interface AvatarUploadOptions extends CommonOptions {
+    maxSize?: number;
+    allowedTypes?: string[];
+}
+interface AvatarUploadResponse {
+    status: number;
+    error?: any;
+    path?: string;
+    filename?: string;
+    previousAvatar?: string;
+}
+interface User {
+    id: string;
+    username?: string;
+    email?: string;
+    avatar?: string;
+    [key: string]: any;
+}
 
 declare class Collection {
     private name;
@@ -52,6 +70,19 @@ declare class Collection {
     update<T = any>(id: string, body?: {
         [key: string]: any;
     } | FormData, options?: CommonOptions): Promise<T>;
+    /**
+     * Upload Avatar
+     */
+    uploadAvatar(userId: string, imageFile: File, options?: AvatarUploadOptions): Promise<AvatarUploadResponse>;
+    /**
+     * RemoveAvatar
+    */
+    removeAvatar(userId: string, options?: CommonOptions): Promise<SingleReturn<User>>;
+    /**
+     * Avatar format and size validation
+     */
+    private validateAvatarFile;
+    private deletePhysicalFile;
 }
 
 declare class DataBase {
@@ -60,10 +91,11 @@ declare class DataBase {
      * collection
      */
     collection(collectionName: string): Collection;
+    users(): Collection;
     /**
      * getFileUrl
      */
     getFileUrl(collectionName: string, rowId: string, filename: string): URL;
 }
 
-export { DataBase as default };
+export { type AvatarUploadOptions, type AvatarUploadResponse, type User, DataBase as default };

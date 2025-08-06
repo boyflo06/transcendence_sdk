@@ -139,6 +139,125 @@ var Collection = class {
     const response = await fetch(url, options);
     return await response.json();
   }
+  /**
+   * Upload Avatar
+   */
+  async uploadAvatar(userId, imageFile, options) {
+    const validation = this.validateAvatarFile(imageFile, options);
+    if (!validation.valid) {
+      return {
+        status: 400,
+        error: {
+          error: "Bad Request",
+          message: validation.error,
+          status: 400
+        }
+      };
+    }
+    try {
+      const user = await this.getOne(userId);
+      const oldAvatar = user.item?.avatar;
+      const formData = new FormData();
+      formData.append("avatar", imageFile);
+      const url = new URL(`http://database:3000/table/${this.name}/update/${userId}`);
+      const response = await fetch(url, {
+        method: "PATCH",
+        body: formData,
+        ...options
+      });
+      const data = await response.json();
+      if (response.ok) {
+        if (oldAvatar && oldAvatar !== data.avatar) {
+          await this.deletePhysicalFile(oldAvatar);
+        }
+        return {
+          status: response.status,
+          path: this.dbInstance.getFileUrl(this.name, userId, data.avatar).toString(),
+          filename: data.avatar,
+          previousAvatar: oldAvatar
+        };
+      } else {
+        return { status: response.status, error: data };
+      }
+    } catch (error) {
+      return {
+        status: 500,
+        error: {
+          error: "Internal Server Error",
+          message: "Erreur lors de l'upload de l'avatar",
+          status: 500
+        }
+      };
+    }
+  }
+  /** 
+   * RemoveAvatar
+  */
+  async removeAvatar(userId, options) {
+    try {
+      const currentUser = await this.getOne(userId);
+      if (currentUser.error || !currentUser.item?.avatar) {
+        return {
+          status: 404,
+          error: { error: "Not Found", message: "Aucun avatar \xE0 supprimer", status: 404 }
+        };
+      }
+      const avatarToDelete = currentUser.item.avatar;
+      const result = await this.update(userId, { avatar: null }, options);
+      await this.deletePhysicalFile(avatarToDelete);
+      return {
+        status: 200,
+        error: void 0,
+        item: result
+      };
+    } catch (error) {
+      return {
+        status: 500,
+        error: {
+          error: "Internal Server Error",
+          message: "Erreur lors de la suppression de l'avatar",
+          status: 500
+        }
+      };
+    }
+  }
+  /**
+   * Avatar format and size validation
+   */
+  validateAvatarFile(file, options) {
+    if (!file) {
+      return { valid: false, error: "Aucun fichier fourni" };
+    }
+    file;
+    if (!file.type.startsWith("image/")) {
+      return { valid: false, error: "Le fichier doit \xEAtre une image" };
+    }
+    file;
+    const allowedTypes = options?.allowedTypes || ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      return {
+        valid: false,
+        error: `Type d'image non autoris\xE9. Types accept\xE9s: ${allowedTypes.join(", ")}`
+      };
+    }
+    const maxSize = options?.maxSize || 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return {
+        valid: false,
+        error: `Image trop volumineuse. Taille maximale: ${Math.round(maxSize / (1024 * 1024))}MB`
+      };
+    }
+    return { valid: true };
+  }
+  async deletePhysicalFile(filename) {
+    try {
+      await fetch(`http://database:3000/files/delete/${filename}`, {
+        method: "DELETE"
+      });
+    } catch (error) {
+      console.warn("Impossible de supprimer le fichier:", filename, error);
+    }
+  }
 };
 var Collection_default = Collection;
 
@@ -151,6 +270,9 @@ var DataBase = class {
    */
   collection(collectionName) {
     return new Collection_default(this, collectionName);
+  }
+  users() {
+    return this.collection("users");
   }
   /**
    * getFileUrl
