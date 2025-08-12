@@ -1,24 +1,21 @@
 {
-  "name": "database-sdk",
-  "version": "1.0.0",
-  "description": "sdk for transcendence database",
-  "main": "dist/index.js",
-  "scripts": {
-    "build": "rm -rf dist && tsup src/index.ts --dts --out-dir dist --format cjs,esm --target es2024 --clean",
-    "test": "tsx test/index.ts"
-  },
-  "files": [
-    "dist"
-  ],
-  "author": "fghybsre",
-  "license": "ISC",
-  "dependencies": {
-    "@types/node": "^24.0.10",
-    "pocketbase": "^0.26.1",
-    "tsx": "^4.20.3"
-  },
-  "devDependencies": {
-    "tsup": "^8.5.0",
-    "typescript": "^5.8.3"
-  }
+	"name": "database-sdk",
+	"version": "1.0.0",
+	"description": "sdk for transcendence database",
+	"main": "dist/index.js",
+	"scripts": {
+		"build": "rm -rf dist && tsup src/index.ts --dts --out-dir dist --format cjs,esm --target es2024 --clean",
+		"test": "tsx test/index.ts"
+	},
+	"files": [
+		"dist"
+	],
+	"author": "fghybsre",
+	"license": "ISC",
+	"devDependencies": {
+		"@types/node": "^24.0.10",
+		"tsup": "^8.5.0",
+		"tsx": "^4.20.3",
+		"typescript": "^5.8.3"
+	}
 }
