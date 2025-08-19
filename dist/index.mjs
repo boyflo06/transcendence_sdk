@@ -31,12 +31,19 @@ var Collection = class {
     if (options.filter) url.searchParams.append("filter", options.filter);
     options = Object.assign({ method: "GET" }, options);
     const response = await fetch(url, options);
-    const res = {
-      status: response.status,
-      error: response.ok ? void 0 : await response.json(),
-      items: response.ok ? await response.json() : void 0
-    };
-    return res;
+    let items, error;
+    if (response.ok) {
+      const text = await response.text();
+      items = text ? JSON.parse(text) : void 0;
+    } else {
+      try {
+        const text = await response.text();
+        error = text ? JSON.parse(text) : void 0;
+      } catch (e) {
+        error = { message: e };
+      }
+    }
+    return { status: response.status, error, items };
   }
   /**
    * getFirstListItem
@@ -76,12 +83,19 @@ var Collection = class {
     const url = new URL(`http://database:3000/table/${this.name}/getOne/${id}`);
     options = Object.assign({ method: "GET" }, options);
     const response = await fetch(url, options);
-    const res = {
-      status: response.status,
-      error: response.ok ? void 0 : await response.json(),
-      item: response.ok ? await response.json() : void 0
-    };
-    return res;
+    let item, error;
+    if (response.ok) {
+      const text = await response.text();
+      item = text ? JSON.parse(text) : void 0;
+    } else {
+      try {
+        const text = await response.text();
+        error = text ? JSON.parse(text) : void 0;
+      } catch (e) {
+        error = { message: e };
+      }
+    }
+    return { status: response.status, error, item };
   }
   containsFile(obj) {
     for (const key in obj) {
@@ -122,12 +136,19 @@ var Collection = class {
       options.body = this.convertToFormData(options.body);
     }
     const response = await fetch(url, options);
-    const res = {
-      status: response.status,
-      error: response.ok ? void 0 : await response.json(),
-      item: response.ok ? await response.json() : void 0
-    };
-    return res;
+    let item, error;
+    if (response.ok) {
+      const text = await response.text();
+      item = text ? JSON.parse(text) : void 0;
+    } else {
+      try {
+        const text = await response.text();
+        error = text ? JSON.parse(text) : void 0;
+      } catch (e) {
+        error = { message: e };
+      }
+    }
+    return { status: response.status, error, item };
   }
   /**
    * update
@@ -142,12 +163,19 @@ var Collection = class {
       options.body = this.convertToFormData(options.body);
     }
     const response = await fetch(url, options);
-    const res = {
-      status: response.status,
-      error: response.ok ? void 0 : await response.json(),
-      item: response.ok ? await response.json() : void 0
-    };
-    return res;
+    let item, error;
+    if (response.ok) {
+      const text = await response.text();
+      item = text ? JSON.parse(text) : void 0;
+    } else {
+      try {
+        const text = await response.text();
+        error = text ? JSON.parse(text) : void 0;
+      } catch (e) {
+        error = { message: e };
+      }
+    }
+    return { status: response.status, error, item };
   }
   /**
    * delete
@@ -158,15 +186,23 @@ var Collection = class {
       method: "DELETE"
     }, options);
     const response = await fetch(url, options);
-    const res = {
-      status: response.status,
-      error: response.ok ? void 0 : await response.json(),
-      item: response.ok ? await response.json() : void 0
-    };
-    return res;
+    let item, error;
+    if (response.ok) {
+      const text = await response.text();
+      item = text ? JSON.parse(text) : void 0;
+    } else {
+      try {
+        const text = await response.text();
+        error = text ? JSON.parse(text) : void 0;
+      } catch (e) {
+        error = { message: e };
+      }
+    }
+    return { status: response.status, error, item };
   }
   /**
    * Upload Avatar
+   * @deprecated use update (or create); usage -> ```...update(userid, {avatar: imageFile}, options);```
    */
   async uploadAvatar(userId, imageFile, options) {
     const validation = this.validateAvatarFile(imageFile, options);

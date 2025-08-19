@@ -76,6 +76,7 @@ declare class Collection {
     delete<T = any>(id: string, options?: CommonOptions): Promise<SingleReturn<T>>;
     /**
      * Upload Avatar
+     * @deprecated use update (or create); usage -> ```...update(userid, {avatar: imageFile}, options);```
      */
     uploadAvatar(userId: string, imageFile: File, options?: AvatarUploadOptions): Promise<AvatarUploadResponse>;
     /**

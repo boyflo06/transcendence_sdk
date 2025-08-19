@@ -41,12 +41,20 @@ class Collection {
 		options = Object.assign({ method: "GET" }, options);
 
 		const response = await fetch(url, options);
-		const res: ListReturn<T> = {
-			status: response.status,
-			error: response.ok ? undefined : await response.json(),
-			items: response.ok ? await response.json() : undefined
+		let items, error;
+		if (response.ok) {
+			const text = await response.text();
+			items = text ? JSON.parse(text) : undefined;
+		} else {
+			try {
+				const text = await response.text();
+				error = text ? JSON.parse(text): undefined;
+			} catch (e) {
+				error = {message: e};
+			}
 		}
-		return (res);
+		
+		return {status: response.status, error, items};
 	}
 
 	/**
@@ -102,12 +110,21 @@ class Collection {
 
 		options = Object.assign({ method: "GET" }, options);
 		const response = await fetch(url, options);
-		const res: SingleReturn<T> = {
-			status: response.status,
-			error: response.ok ? undefined : await response.json(),
-			item: response.ok ? await response.json() : undefined
+
+		let item, error;
+		if (response.ok) {
+			const text = await response.text();
+			item = text ? JSON.parse(text) : undefined;
+		} else {
+			try {
+				const text = await response.text();
+				error = text ? JSON.parse(text): undefined;
+			} catch (e) {
+				error = {message: e};
+			}
 		}
-		return (res);
+		
+		return {status: response.status, error, item};
 	}
 
 	private containsFile(obj: any): boolean {
@@ -158,12 +175,20 @@ class Collection {
 		}
 
 		const response = await fetch(url, options);
-		const res: SingleReturn<T> = {
-			status: response.status,
-			error: response.ok ? undefined : await response.json(),
-			item: response.ok ? await response.json() : undefined
+		let item, error;
+		if (response.ok) {
+			const text = await response.text();
+			item = text ? JSON.parse(text) : undefined;
+		} else {
+			try {
+				const text = await response.text();
+				error = text ? JSON.parse(text): undefined;
+			} catch (e) {
+				error = {message: e};
+			}
 		}
-		return (res);
+		
+		return {status: response.status, error, item};
 	}
 
 	/**
@@ -182,12 +207,20 @@ class Collection {
 		}
 
 		const response = await fetch(url, options);
-		const res: SingleReturn<T> = {
-			status: response.status,
-			error: response.ok ? undefined : await response.json(),
-			item: response.ok ? await response.json() : undefined
+		let item, error;
+		if (response.ok) {
+			const text = await response.text();
+			item = text ? JSON.parse(text) : undefined;
+		} else {
+			try {
+				const text = await response.text();
+				error = text ? JSON.parse(text): undefined;
+			} catch (e) {
+				error = {message: e};
+			}
 		}
-		return (res);
+		
+		return {status: response.status, error, item};
 	}
 
 	/**
@@ -200,16 +233,25 @@ class Collection {
 		}, options);
 
 		const response = await fetch(url, options);
-		const res: SingleReturn<T> = {
-			status: response.status,
-			error: response.ok ? undefined : await response.json(),
-			item: response.ok ? await response.json() : undefined
+		let item, error;
+		if (response.ok) {
+			const text = await response.text();
+			item = text ? JSON.parse(text) : undefined;
+		} else {
+			try {
+				const text = await response.text();
+				error = text ? JSON.parse(text): undefined;
+			} catch (e) {
+				error = {message: e};
+			}
 		}
-		return (res);
+		
+		return {status: response.status, error, item};
 	}
 
 	/**
 	 * Upload Avatar
+	 * @deprecated use update (or create); usage -> ```...update(userid, {avatar: imageFile}, options);```
 	 */
 	public async uploadAvatar(userId: string, imageFile: File, options?: AvatarUploadOptions): Promise<AvatarUploadResponse> {
 		// Validation du fichier
