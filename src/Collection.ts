@@ -144,7 +144,7 @@ class Collection {
 		return form;
 	}
 
-	public async create<T = any>(body: { [key: string]: any } | FormData, options?: CommonOptions): Promise<T> {
+	public async create<T = any>(body: { [key: string]: any } | FormData, options?: CommonOptions): Promise<SingleReturn<T>> {
 		const url = new URL(`http://database:3000/table/${this.name}/create`);
 
 		options = Object.assign({
@@ -158,13 +158,18 @@ class Collection {
 		}
 
 		const response = await fetch(url, options);
-		return (await response.json() as T);
+		const res: SingleReturn<T> = {
+			status: response.status,
+			error: response.ok ? undefined : await response.json(),
+			item: response.ok ? await response.json() : undefined
+		}
+		return (res);
 	}
 
 	/**
 	 * update
 	 */
-	public async update<T = any>(id: string, body?: { [key: string]: any } | FormData, options?: CommonOptions): Promise<T> {
+	public async update<T = any>(id: string, body?: { [key: string]: any } | FormData, options?: CommonOptions): Promise<SingleReturn<T>> {
 		const url = new URL(`http://database:3000/table/${this.name}/update/${id}`);
 
 		options = Object.assign({
@@ -177,7 +182,30 @@ class Collection {
 		}
 
 		const response = await fetch(url, options);
-		return (await response.json() as T);
+		const res: SingleReturn<T> = {
+			status: response.status,
+			error: response.ok ? undefined : await response.json(),
+			item: response.ok ? await response.json() : undefined
+		}
+		return (res);
+	}
+
+	/**
+	 * delete
+	 */
+	public async delete<T = any>(id: string, options?: CommonOptions): Promise<SingleReturn<T>> {
+		const url = new URL(`http://database:3000/table/${this.name}/delete/${id}`);
+		options = Object.assign({
+			method: "DELETE"
+		}, options);
+
+		const response = await fetch(url, options);
+		const res: SingleReturn<T> = {
+			status: response.status,
+			error: response.ok ? undefined : await response.json(),
+			item: response.ok ? await response.json() : undefined
+		}
+		return (res);
 	}
 
 	/**
@@ -257,11 +285,7 @@ class Collection {
 
         await this.deletePhysicalFile(avatarToDelete);
 
-        return {
-            status: 200,
-            error: undefined,
-            item: result
-        };
+        return result;
     } catch (error) {
         return {
             status: 500,

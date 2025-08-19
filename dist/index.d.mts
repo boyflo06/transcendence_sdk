@@ -63,13 +63,17 @@ declare class Collection {
     private convertToFormData;
     create<T = any>(body: {
         [key: string]: any;
-    } | FormData, options?: CommonOptions): Promise<T>;
+    } | FormData, options?: CommonOptions): Promise<SingleReturn<T>>;
     /**
      * update
      */
     update<T = any>(id: string, body?: {
         [key: string]: any;
-    } | FormData, options?: CommonOptions): Promise<T>;
+    } | FormData, options?: CommonOptions): Promise<SingleReturn<T>>;
+    /**
+     * delete
+     */
+    delete<T = any>(id: string, options?: CommonOptions): Promise<SingleReturn<T>>;
     /**
      * Upload Avatar
      */

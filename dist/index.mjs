@@ -122,7 +122,12 @@ var Collection = class {
       options.body = this.convertToFormData(options.body);
     }
     const response = await fetch(url, options);
-    return await response.json();
+    const res = {
+      status: response.status,
+      error: response.ok ? void 0 : await response.json(),
+      item: response.ok ? await response.json() : void 0
+    };
+    return res;
   }
   /**
    * update
@@ -137,7 +142,28 @@ var Collection = class {
       options.body = this.convertToFormData(options.body);
     }
     const response = await fetch(url, options);
-    return await response.json();
+    const res = {
+      status: response.status,
+      error: response.ok ? void 0 : await response.json(),
+      item: response.ok ? await response.json() : void 0
+    };
+    return res;
+  }
+  /**
+   * delete
+   */
+  async delete(id, options) {
+    const url = new URL(`http://database:3000/table/${this.name}/delete/${id}`);
+    options = Object.assign({
+      method: "DELETE"
+    }, options);
+    const response = await fetch(url, options);
+    const res = {
+      status: response.status,
+      error: response.ok ? void 0 : await response.json(),
+      item: response.ok ? await response.json() : void 0
+    };
+    return res;
   }
   /**
    * Upload Avatar
@@ -205,11 +231,7 @@ var Collection = class {
       const avatarToDelete = currentUser.item.avatar;
       const result = await this.update(userId, { avatar: null }, options);
       await this.deletePhysicalFile(avatarToDelete);
-      return {
-        status: 200,
-        error: void 0,
-        item: result
-      };
+      return result;
     } catch (error) {
       return {
         status: 500,
